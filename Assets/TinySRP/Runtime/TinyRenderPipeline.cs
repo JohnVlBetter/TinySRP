@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -6,15 +7,25 @@ public class TinyRenderPipeline : RenderPipeline
 {
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
 
+    bool useDynamicBatching;
+    bool useGPUInstancing;
+
+    public TinyRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher)
+    {
+        this.useDynamicBatching = useDynamicBatching;
+        this.useGPUInstancing = useGPUInstancing;
+        GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
+    }
+
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
         foreach (var camera in cameras)
         {
-            RenderSingleCamera(context, camera);
+            RenderSingleCamera(context, camera, useDynamicBatching, useGPUInstancing);
         }
     }
 
-    void RenderSingleCamera(ScriptableRenderContext context, Camera camera)
+    void RenderSingleCamera(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing)
     {
 #if UNITY_EDITOR
         //Sceneœ‘ æui
@@ -36,7 +47,7 @@ public class TinyRenderPipeline : RenderPipeline
         var clearFlags = camera.clearFlags;
         //clear depth color
         cmdBuffer.ClearRenderTarget(
-            clearFlags <= CameraClearFlags.Depth, 
+            clearFlags <= CameraClearFlags.Depth,
             clearFlags == CameraClearFlags.Color,
             clearFlags == CameraClearFlags.Color ?
                 camera.backgroundColor.linear : Color.clear
@@ -50,7 +61,11 @@ public class TinyRenderPipeline : RenderPipeline
         {
             criteria = SortingCriteria.CommonOpaque
         };
-        var drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings);
+        var drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings)
+        {
+            enableDynamicBatching = useDynamicBatching,
+            enableInstancing = useGPUInstancing
+        };
         var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
         context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
 
@@ -96,7 +111,7 @@ public class TinyRenderPipeline : RenderPipeline
         )
         {
             overrideMaterial = errorMaterial
-        }; ;
+        };
         for (int i = 1; i < legacyShaderTagIds.Length; i++)
         {
             drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
