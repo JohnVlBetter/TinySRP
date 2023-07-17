@@ -153,7 +153,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  material: {fileID: 2100000, guid: f5531721165b7c949be1c56575d267c4, type: 2}
+  material: {fileID: 2100000, guid: 5daa2156d90a1894d83e86c4e83dca1b, type: 2}
+  cutoff: 0.5
 --- !u!4 &151784713
 Transform:
   m_ObjectHideFlags: 0

@@ -1,14 +1,16 @@
-using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 public class TinyRenderPipeline : RenderPipeline
 {
-    static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+    static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit"),
+                       litShaderTagId   = new ShaderTagId("TinyLit");
 
     bool useDynamicBatching;
     bool useGPUInstancing;
+
+    TinyLighting lighting = new TinyLighting();
 
     public TinyRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher)
     {
@@ -32,6 +34,7 @@ public class TinyRenderPipeline : RenderPipeline
         PrepareForSceneWindow(camera);
 #endif
 
+        //剔除
         ScriptableCullingParameters cullingParameters;
         if (!camera.TryGetCullingParameters(out cullingParameters))
         {
@@ -40,12 +43,16 @@ public class TinyRenderPipeline : RenderPipeline
         }
         CullingResults cullingResults = context.Cull(ref cullingParameters);
 
+        //设置灯光参数
+        lighting.Setup(context);
+
+        //设置camera参数
         context.SetupCameraProperties(camera);
 
         var cmdBuffer = CommandBufferPool.Get(camera.name);
 
-        var clearFlags = camera.clearFlags;
         //clear depth color
+        var clearFlags = camera.clearFlags;
         cmdBuffer.ClearRenderTarget(
             clearFlags <= CameraClearFlags.Depth,
             clearFlags == CameraClearFlags.Color,
@@ -66,6 +73,8 @@ public class TinyRenderPipeline : RenderPipeline
             enableDynamicBatching = useDynamicBatching,
             enableInstancing = useGPUInstancing
         };
+        drawingSettings.SetShaderPassName(1, litShaderTagId);
+
         var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
         context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
 
@@ -117,9 +126,7 @@ public class TinyRenderPipeline : RenderPipeline
             drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
         }
         var filteringSettings = FilteringSettings.defaultValue;
-        context.DrawRenderers(
-            cullingResults, ref drawingSettings, ref filteringSettings
-        );
+        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
     }
 
     //绘制Gizmos
