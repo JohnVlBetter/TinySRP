@@ -53,7 +53,7 @@ float4 LitFragment(VertexOutput input): SV_TARGET
 	surface.normal = normalize(input.normalWS);
 	surface.color = base.rgb;
 	surface.alpha = base.a;
-	float3 color = GetLighting(surface, GetDirectionalLight());
+	float3 color = GetLighting(surface);
 	return float4(color, surface.alpha);
 }
 

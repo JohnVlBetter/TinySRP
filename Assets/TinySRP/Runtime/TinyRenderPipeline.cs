@@ -17,6 +17,9 @@ public class TinyRenderPipeline : RenderPipeline
         this.useDynamicBatching = useDynamicBatching;
         this.useGPUInstancing = useGPUInstancing;
         GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
+
+        //线性光强
+        GraphicsSettings.lightsUseLinearIntensity = true;
     }
 
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
@@ -44,7 +47,7 @@ public class TinyRenderPipeline : RenderPipeline
         CullingResults cullingResults = context.Cull(ref cullingParameters);
 
         //设置灯光参数
-        lighting.Setup(context);
+        lighting.Setup(context, cullingResults);
 
         //设置camera参数
         context.SetupCameraProperties(camera);
