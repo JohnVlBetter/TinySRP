@@ -29,4 +29,6 @@ Shader "TinySRP/Unlit"
             ENDHLSL
         }
     }
+
+    CustomEditor "TinyShaderGUI"
 }
