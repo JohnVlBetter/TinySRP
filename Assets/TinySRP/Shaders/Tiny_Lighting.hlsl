@@ -18,6 +18,7 @@ float SpecularStrength (SurfaceData surface, BRDFData brdf, Light light) {
 }
 
 //PBR直接光照
+//todo 后续改成自己那套pbr 也可能做成延迟渲染的
 float3 DirectBRDF (SurfaceData surface, BRDFData brdf, Light light) {
 	return SpecularStrength(surface, brdf, light) * brdf.specular + brdf.diffuse;
 }

@@ -10,9 +10,14 @@ public class TinyRenderPipeline : RenderPipeline
     bool useDynamicBatching;
     bool useGPUInstancing;
 
-    TinyLighting lighting = new TinyLighting();
+    //光照相关
+    Lighting lighting = new Lighting();
 
-    public TinyRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher)
+    //阴影相关
+    ShadowSettings shadowSettings;
+    Shadows shadows = new Shadows(); 
+
+    public TinyRenderPipeline(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher, ShadowSettings shadowSettings)
     {
         this.useDynamicBatching = useDynamicBatching;
         this.useGPUInstancing = useGPUInstancing;
@@ -20,17 +25,20 @@ public class TinyRenderPipeline : RenderPipeline
 
         //线性光强
         GraphicsSettings.lightsUseLinearIntensity = true;
+
+        //阴影设置
+        this.shadowSettings = shadowSettings;
     }
 
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
         foreach (var camera in cameras)
         {
-            RenderSingleCamera(context, camera, useDynamicBatching, useGPUInstancing);
+            RenderSingleCamera(context, camera, useDynamicBatching, useGPUInstancing, shadowSettings);
         }
     }
 
-    void RenderSingleCamera(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing)
+    void RenderSingleCamera(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing, ShadowSettings shadowSettings)
     {
 #if UNITY_EDITOR
         //Scene显示ui
@@ -44,10 +52,17 @@ public class TinyRenderPipeline : RenderPipeline
             //没什么可渲染的就return
             return;
         }
+        cullingParameters.shadowDistance = Mathf.Min(shadowSettings.maxDistance, camera.farClipPlane);
         CullingResults cullingResults = context.Cull(ref cullingParameters);
 
+        //初始化阴影
+        shadows.Setup(context, cullingResults, shadowSettings);
+
         //设置灯光参数
-        lighting.Setup(context, cullingResults);
+        lighting.Setup(context, cullingResults, shadows);
+
+        //渲染阴影
+        shadows.Render();
 
         //设置camera参数
         context.SetupCameraProperties(camera);

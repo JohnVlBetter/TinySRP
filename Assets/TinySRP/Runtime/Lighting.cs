@@ -2,7 +2,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-public class TinyLighting : MonoBehaviour
+public class Lighting : MonoBehaviour
 {
     const string bufferName = "Lighting";
 
@@ -23,9 +23,12 @@ public class TinyLighting : MonoBehaviour
 
     CullingResults cullingResults;
 
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults)
+    Shadows shadows;
+
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults, Shadows shadows)
     {
         this.cullingResults = cullingResults;
+        this.shadows = shadows;
 
         buffer.BeginSample(bufferName);
 
@@ -65,5 +68,6 @@ public class TinyLighting : MonoBehaviour
     void SetupDirectionalLight(int index, ref VisibleLight visibleLight) {
         dirLightColors[index] = visibleLight.finalColor;
         dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
+        shadows.ReserveDirectionalShadows(visibleLight.light, index);
     }
 }
